@@ -13,6 +13,18 @@
         android:theme="@style/Theme.MidProject_orange"
         tools:targetApi="31">
         <activity
+            android:name=".Actualizar"
+            android:exported="false" />
+        <activity
+            android:name=".Borrar"
+            android:exported="false" />
+        <activity
+            android:name=".Agregar"
+            android:exported="false" />
+        <activity
+            android:name=".SecondActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
