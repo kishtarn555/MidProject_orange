@@ -90,6 +90,25 @@ class SQLiteHelper(context:Context) :  SQLiteOpenHelper(context, "agenda_info", 
 
         return idExists
     }
+    fun getProduct(id: Int): Product? {
+        val db = this.readableDatabase
+        val query = "SELECT * FROM products WHERE id = ?"
+        val cursor = db.rawQuery(query, arrayOf(id.toString()))
+        var product: Product? = null
+
+        if (cursor.moveToFirst()) {
+            val productId = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
+            val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+            val price = cursor.getFloat(cursor.getColumnIndexOrThrow("price"))
+            val quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"))
+            product = Product(productId, name, price, quantity)
+        }
+
+        cursor.close()
+        db.close()
+
+        return product
+    }
 
 
 }
