@@ -1,6 +1,7 @@
 package com.example.midproject_orange
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
@@ -12,34 +13,51 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.example.sqliteproject.SQLiteHelper
+import java.text.NumberFormat
+import java.util.Currency
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
     var sqlLiteHelper: SQLiteHelper? = null
+    var productosTableLayout: TableLayout? = null
+    var editTxtProductId: EditText? = null
+
+     fun createTextView(text: String): TextView {
+        val textView = TextView(this)
+        textView.text = text
+        return textView
+    }
+
+    // Formatea float como string del tipo de moneda en currencyCode
+    fun formatFloatAsCurrency(number: Float, currencyCode: String): String {
+        // Crear formateador con Locale default del sistema
+        val currencyFormat = NumberFormat.getCurrencyInstance(Locale.getDefault())
+        currencyFormat.currency = Currency.getInstance(currencyCode)
+
+        val formattedFloat = currencyFormat.format(number) // ejemplo: MX$1,200.20
+        val currencySymbol = Currency.getInstance(currencyCode).symbol
+        // Borrar "MX$" de la string (reemplazarlo por string vacia) y le agregamos el "$" al principio
+        val stringWithoutSymbol = "$" + formattedFloat.replace(currencySymbol, "")
+        return stringWithoutSymbol
+    }
 
     fun addFormatToProductRow(txtId: TextView, txtName: TextView, txtPrice: TextView, txtQuantity: TextView, isTitle: Boolean) {
         // Padding
-        txtId.setPadding(10, 10, 10, 10)
-        txtName.setPadding(10, 10, 10, 10)
-        txtPrice.setPadding(20, 20, 20, 20)
-        txtQuantity.setPadding(20, 20, 20, 20)
+        txtId.setPadding(10, 10, 10, 20)
+        txtName.setPadding(10, 10, 10, 20)
+        txtPrice.setPadding(15, 10, 10, 20)
+        txtQuantity.setPadding(15, 10, 10, 20)
 
         // LayoutParams
-        val params1 = TableRow.LayoutParams(
-            TableRow.LayoutParams.WRAP_CONTENT, // width
-            TableRow.LayoutParams.WRAP_CONTENT, // height
-            0f
+        val params = TableRow.LayoutParams(
+            0, // width (es 0 para que los campos se adapten al espacio)
+            TableRow.LayoutParams.MATCH_PARENT, // height
         )
 
-        val params2 = TableRow.LayoutParams(
-            TableRow.LayoutParams.WRAP_CONTENT, // width
-            TableRow.LayoutParams.WRAP_CONTENT, // height
-            1f // Share remaining horizontal space
-        )
-
-        txtId.layoutParams = params1
-        txtName.layoutParams = params1
-        txtPrice.layoutParams = params2
-        txtQuantity.layoutParams = params2
+        txtId.layoutParams = params
+        txtName.layoutParams = params
+        txtPrice.layoutParams = params
+        txtQuantity.layoutParams = params
 
         // Centrar horizontal y verticalmente
         txtId.gravity = Gravity.CENTER
@@ -51,18 +69,19 @@ class MainActivity : AppCompatActivity() {
     fun addColumnTitlesProductsTable(productosTableLayout: TableLayout) {
         val tableRow = TableRow(this)
         // Crear elementos de la fila
-        val txtId = TextView(this)
-        val txtName = TextView(this)
-        val txtPrice = TextView(this)
-        val txtQuantity = TextView(this)
+        val txtId = createTextView("ID")
+        val txtName = createTextView("Producto")
+        val txtPrice = createTextView("Precio")
+        val txtQuantity = createTextView("Cantidad")
 
         // Formato para los elementos de la fila
-        addFormatToProductRow(txtId, txtName, txtPrice, txtPrice, true)
+        addFormatToProductRow(txtId, txtName, txtPrice, txtQuantity, true)
 
-        txtId.text = "ID"
-        txtName.text = "Producto"
-        txtPrice.text = "Precio"
-        txtQuantity.text = "Cantidad"
+        // Texto en negritas
+        txtId.setTypeface(null, Typeface.BOLD)
+        txtName.setTypeface(null, Typeface.BOLD)
+        txtPrice.setTypeface(null, Typeface.BOLD)
+        txtQuantity.setTypeface(null, Typeface.BOLD)
 
         tableRow.addView(txtId)
         tableRow.addView(txtName)
@@ -72,26 +91,36 @@ class MainActivity : AppCompatActivity() {
         productosTableLayout.addView(tableRow)
     }
 
+    // Detectar click en fila de la tabla
+    fun setProductTableRowClickListener(tableRow: TableRow, txtId: TextView) {
+        tableRow.setOnClickListener {
+            // Poner el ID del producto que se clickeo en el campo de ID para editar
+            val idVal = txtId.text.toString()
+            editTxtProductId!!.setText(idVal)
+        }
+    }
+
     fun createProductTableRow(product: Product): TableRow {
         val tableRow = TableRow(this)
+
+        // Obtener precio con formato MXN: Redondear precio a dos decimales y obtenerlo como string
+        val formattedPrice = formatFloatAsCurrency(product.price, "MXN")
+
         // Crear elementos de la fila
-        val txtId = TextView(this)
-        val txtName = TextView(this)
-        val txtPrice = TextView(this)
-        val txtQuantity = TextView(this)
+        val txtId = createTextView(product.id.toString())
+        val txtName = createTextView(product.name)
+        val txtPrice = createTextView(formattedPrice)
+        val txtQuantity = createTextView(product.quantity.toString())
 
         // Formato para los elementos de la fila
-        addFormatToProductRow(txtId, txtName, txtPrice, txtPrice, false)
-
-        txtId.text = product.id.toString()
-        txtName.text = product.name
-        txtPrice.text = product.price.toString()
-        txtQuantity.text = product.quantity.toString()
+        addFormatToProductRow(txtId, txtName, txtPrice, txtQuantity, false)
 
         tableRow.addView(txtId)
         tableRow.addView(txtName)
         tableRow.addView(txtPrice)
         tableRow.addView(txtQuantity)
+
+        setProductTableRowClickListener(tableRow, txtId)
 
         return tableRow
     }
@@ -121,15 +150,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         sqlLiteHelper = SQLiteHelper(this)
-        val productosTableLayout = findViewById<TableLayout>(R.id.productosTableLayout)
+        productosTableLayout = findViewById<TableLayout>(R.id.productosTableLayout)
 
         val btnAgregar = findViewById<Button>(R.id.btnAgregar)
         val btnActualizar = findViewById<Button>(R.id.btnActualizar)
         val btnBorrar = findViewById<Button>(R.id.btnBorrar)
 
-        val editTxtProductId = findViewById<EditText>(R.id.editTxtProductId)
+        editTxtProductId = findViewById<EditText>(R.id.editTxtProductId)
 
-        fillProductsTable(productosTableLayout)
+        fillProductsTable(productosTableLayout!!)
 
         btnAgregar.setOnClickListener{
             Intent(this,Agregar::class.java).also{
@@ -139,7 +168,7 @@ class MainActivity : AppCompatActivity() {
 
         btnActualizar.setOnClickListener {
             Intent(this,Actualizar::class.java).also {
-                val productIdString = editTxtProductId.text.toString()
+                val productIdString = editTxtProductId!!.text.toString()
                 // Validar ID del producto
                 if(productIdIsValid(productIdString)) {
                     val productIdForUpdate = productIdString.toInt()
@@ -153,7 +182,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnBorrar.setOnClickListener{
-            val productIdString = editTxtProductId.text.toString()
+            val productIdString = editTxtProductId!!.text.toString()
             // Validar ID del producto
             if(productIdIsValid(productIdString)) {
                 val productIdForUpdate = productIdString.toInt()
@@ -169,8 +198,8 @@ class MainActivity : AppCompatActivity() {
                         Toast.makeText(this, "El producto fue borrado exitosamente", Toast.LENGTH_SHORT)
                             .show()
 
-                        // Recreate Activity
-                        recreate()
+                        // Refresh table
+                        fillProductsTable(productosTableLayout!!)
                     }
                     .setNegativeButton("Cancelar") { dialog, which -> }
                 // Crear dialog para confirmar
@@ -192,8 +221,8 @@ class MainActivity : AppCompatActivity() {
             // Obtener refresh flag si data es null, refresh es false
             val refresh = data?.getBooleanExtra("refresh", false) ?: false
             if (refresh) {
-                // Recreate activity
-                recreate()
+                // Refresh table
+                fillProductsTable(productosTableLayout!!)
             }
         }
     }
