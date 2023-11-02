@@ -24,11 +24,11 @@ class SQLiteHelper(context:Context) :  SQLiteOpenHelper(context, "agenda_info", 
     }
 
 
-    fun insert(name:String, price:Float, quanity:Int) {
+    fun insert(name:String, price:Float, quantity:Int) {
         val data = ContentValues()
         data.put("name", name)
         data.put("price", price)
-        data.put("quantity", quanity)
+        data.put("quantity", quantity)
         val db = this.writableDatabase
         db.insert("products",null, data)
         db.close()
@@ -56,16 +56,40 @@ class SQLiteHelper(context:Context) :  SQLiteOpenHelper(context, "agenda_info", 
         return productList
     }
 
-    fun deleteProduct(id:Int) : Boolean{
-        return false;
+    //Returns true if the Id existed and was deleted
+    fun deleteProduct(id: Int): Boolean {
+        val db = this.writableDatabase
+        val rowsAffected = db.delete("products", "id=?", arrayOf(id.toString()))
+
+        db.close()
+
+        return rowsAffected > 0
     }
-    fun updateProduct(id:Int, name:String, price:Float, quanity: Int): Boolean {
-        return false;
+    fun updateProduct(id:Int, name:String, price:Float, quantity: Int): Boolean {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put("name", name)
+        values.put("price", price)
+        values.put("quantity", quantity)
+
+        val rowsAffected = db.update("products", values, "id=?",  arrayOf(id.toString()))
+        db.close()
+        return rowsAffected > 0
     }
 
-    //Returns if an ID exists in the DB
-    fun checkId(id:Int): Boolean {
-        return false;
+    //Returns true if an ID exists in the DB
+    fun checkId(id: Int): Boolean {
+        val db = this.readableDatabase
+        val query = "SELECT id FROM products WHERE id = ?"
+        val cursor = db.rawQuery(query, arrayOf(id.toString()))
+
+        val idExists = cursor.moveToFirst()
+
+        cursor.close()
+        db.close()
+
+        return idExists
     }
+
 
 }
