@@ -1,5 +1,6 @@
 package com.example.midproject_orange
 
+import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -9,61 +10,70 @@ import android.widget.Toast
 import com.example.sqliteproject.SQLiteHelper
 
 class Actualizar : AppCompatActivity() {
-    var nombre:EditText? = null
-    var precio:EditText? = null
-    var cantidad:EditText? = null
-    var productId:Int=-1
+    var sqlLiteHelper: SQLiteHelper? = null
+    var txtNombre: EditText? = null
+    var txtPrecio: EditText? = null
+    var txtCantidad: EditText? = null
+    var productId: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_actualizar)
 
+        sqlLiteHelper = SQLiteHelper(this)
+        txtNombre = findViewById<EditText>(R.id.txtNombre)
+        txtPrecio = findViewById<EditText>(R.id.txtPrecio)
+        txtCantidad = findViewById<EditText>(R.id.txtCantidad)
+        val btnGuardar = findViewById<Button>(R.id.btnGuardar)
 
-        nombre  = findViewById<EditText>(R.id.txtNombre)
-        precio  = findViewById<EditText>(R.id.txtPrecio)
-        cantidad= findViewById<EditText>(R.id.txtCantidad)
-        val btnGuardar=findViewById<Button>(R.id.btnGuardar)
         btnGuardar.setOnClickListener {
-            btnAction();
+            btnAction()
         }
 
+        productId = intent.getIntExtra("productId",-1)
+        val product = sqlLiteHelper!!.getProduct(productId)
 
-        productId=intent.getIntExtra("productID",-1);
-        val sqlLiteHelper = SQLiteHelper(this);
-        val product =  sqlLiteHelper.getProduct(productId);
         if (product != null) {
-
-            nombre?.setText(product.name);
-            precio?.setText(product.price.toString());
-            cantidad?.setText(product.quantity.toString());
+            txtNombre!!.setText(product.name)
+            txtPrecio!!.setText(product.price.toString())
+            txtCantidad!!.setText(product.quantity.toString())
         } else {
-
             Toast.makeText(this, "No se pudo cargar el producto", Toast.LENGTH_LONG)
-                .show();
+                .show()
             finish()
         }
     }
 
     fun btnAction() {
-        val nombreVal=nombre!!.text.toString()
-        val precioVal=precio!!.text.toString().toFloat()
-        val cantidadVal=cantidad!!.text.toString().toInt()
         if (
-            nombre!!.text.toString().length == 0
-            || precio?.text.toString().toFloatOrNull() == null
-            || cantidad?.text.toString().toIntOrNull() == null
+            txtNombre!!.text.toString().isEmpty()
+            || txtPrecio!!.text.toString().toFloatOrNull() == null
+            || txtCantidad!!.text.toString().toIntOrNull() == null
         ) {
-            Toast.makeText(this, "Campos invalidos", Toast.LENGTH_LONG)
-                .show();
-            return;
-        }
-        Intent(this,MainActivity::class.java).also {
-            val sqlLiteHelper: SQLiteHelper = SQLiteHelper(this)
-            sqlLiteHelper.updateProduct(productId, nombreVal, precioVal, cantidadVal)
-            Toast.makeText(this, "Producto actualizado", Toast.LENGTH_LONG)
-                .show();
-            startActivity(it)
+            Toast.makeText(this, "Los campos no son válidos", Toast.LENGTH_SHORT)
+                .show()
+            return
         }
 
+        val nombreVal = txtNombre!!.text.toString()
+        val precioVal = txtPrecio!!.text.toString().toFloat()
+        val cantidadVal = txtCantidad!!.text.toString().toInt()
+
+        if(cantidadVal == 0) {
+            Toast.makeText(this, "La cantidad no es válida (es nula)", Toast.LENGTH_SHORT)
+                .show()
+            return
+        }
+
+        sqlLiteHelper!!.updateProduct(productId, nombreVal, precioVal, cantidadVal)
+
+        Toast.makeText(this, "Producto actualizado exitosamente", Toast.LENGTH_LONG)
+            .show()
+
+        // Regresar a MainActivity con el result
+        val resultIntent = Intent()
+        resultIntent.putExtra("refresh", true)
+        setResult(Activity.RESULT_OK, resultIntent)
+        finish()
     }
 }

@@ -1,5 +1,6 @@
 package com.example.midproject_orange
 
+import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -13,38 +14,49 @@ class Agregar : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_agregar)
 
-        val btnGuardar=findViewById<Button>(R.id.btnGuardar)
+        val btnGuardar = findViewById<Button>(R.id.btnGuardar)
+
         btnGuardar.setOnClickListener {
-            btnAction();
+            btnGuardarAction()
         }
     }
-    fun btnAction() {
-        val nombre=findViewById<EditText>(R.id.txtNombre)
-        val precio=findViewById<EditText>(R.id.txtPrecio)
-        val cantidad=findViewById<EditText>(R.id.txtCantidad)
+    fun btnGuardarAction() {
+        val txtNombre = findViewById<EditText>(R.id.txtNombre)
+        val txtPrecio = findViewById<EditText>(R.id.txtPrecio)
+        val txtCantidad = findViewById<EditText>(R.id.txtCantidad)
+
+        // Validar campos del producto
         if (
-            nombre.text.toString().length == 0
-            || precio.text.toString().toFloatOrNull() == null
-            || cantidad.text.toString().toIntOrNull() == null
+            txtNombre.text.toString().isEmpty()
+            || txtPrecio.text.toString().toFloatOrNull() == null
+            || txtCantidad.text.toString().toIntOrNull() == null
         ) {
-            Toast.makeText(this, "Campos invalidos", Toast.LENGTH_LONG)
-                .show();
-            return;
+            Toast.makeText(this, "Los campos no son válidos", Toast.LENGTH_SHORT)
+                .show()
+            return
         }
-        Intent(this,MainActivity::class.java).also {
 
-            val nombreVal=nombre.text.toString()
-            val precioVal=precio.text.toString().toFloat()
-            val cantidadVal=cantidad.text.toString().toInt()
+        val nombreVal = txtNombre.text.toString()
+        val precioVal = txtPrecio.text.toString().toFloat()
+        val cantidadVal = txtCantidad.text.toString().toInt()
 
-            val sqLiteHelper = SQLiteHelper(this)
-            sqLiteHelper.insert(nombreVal, precioVal, cantidadVal)
-            //it.putExtra("nombre",nombreVal)
-            //it.putExtra("precio",precioVal)
-            //it.putExtra("cantidad",cantidadVal)
-            Toast.makeText(this, "Producto insertado", Toast.LENGTH_LONG)
-                .show();
-            startActivity(it)
+        if(cantidadVal == 0) {
+            Toast.makeText(this, "La cantidad no es válida (es nula)", Toast.LENGTH_SHORT)
+                .show()
+            return
         }
+
+        val dbHelper = SQLiteHelper(this)
+
+        dbHelper.insert(nombreVal, precioVal, cantidadVal)
+
+        Toast.makeText(this, "Producto agregado exitosamente", Toast.LENGTH_LONG)
+            .show()
+
+        // Regresar a MainActivity con el result
+        val resultIntent = Intent()
+        resultIntent.putExtra("refresh", true)
+        setResult(Activity.RESULT_OK, resultIntent)
+        finish()
     }
 }
