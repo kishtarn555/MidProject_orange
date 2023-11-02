@@ -63,4 +63,9 @@ class SQLiteHelper(context:Context) :  SQLiteOpenHelper(context, "agenda_info", 
         return false;
     }
 
+    //Returns if an ID exists in the DB
+    fun checkId(id:Int): Boolean {
+        return false;
+    }
+
 }
