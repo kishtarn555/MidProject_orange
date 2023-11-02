@@ -56,4 +56,11 @@ class SQLiteHelper(context:Context) :  SQLiteOpenHelper(context, "agenda_info", 
         return productList
     }
 
+    fun deleteProduct(id:Int) : Boolean{
+
+    }
+    fun updateProduct(id:Int, name:String, price:Float, quanity: Int): Boolean {
+
+    }
+
 }
